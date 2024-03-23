@@ -7,7 +7,7 @@
 module Statistic.Source(occurrences, entropy, orderedCounts) where
 
 import Data.Map (Map)
-import Data.List
+import Data.List (sortOn)
 import qualified Data.Map as Map
 
 -- | The map giving occurrences of each symbol in the source
@@ -39,4 +39,4 @@ entropy a =
 orderedCounts :: Ord a => [a] -> [(a, Int)]
 orderedCounts a =                                        
   let list = Map.toList (occurrences a)                      
-  in Data.List.sortOn (\(x, y) -> y) list  
+  in sortOn (\(_, y) -> y) list  

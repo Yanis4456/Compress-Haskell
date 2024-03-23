@@ -6,20 +6,20 @@
 module Statistic.ShannonFano(tree) where
 
 import Statistic.EncodingTree
-import Staststic.Source
-import Data.List
+import Statistic.Source
+import Data.List()
 
 -- | Shannon-Fano tree generation
 tree :: Ord a => [a] -> Maybe (EncodingTree a)
 tree [] = Nothing
 tree my_list = Just (makeTree (fst start_tree) (snd start_tree) s1 s2)
- where ordered = Data.List.reverse (orderedCounts my_list)
+ where ordered = reverse (orderedCounts my_list)
       
        split n1 n2 _ [(_,_), (_,_)] = (0, n1, n2)
        split n1 n2 i list = let value = snd (list !! i)
           in
             if n1 + value >= n2 - value
-              then if n2 - n1 > value
+              then if n2 - n1 >= value
                     then  (i, (n1 + value), (n2 - value))
                     else (i - 1, n1, n2)
                else split (n1 + value) (n2 - value) (i + 1) list

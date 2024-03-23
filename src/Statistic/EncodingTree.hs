@@ -23,8 +23,8 @@ count (EncodingNode cnt _ _) = cnt
 
 -- | Search for symbol in encoding tree
 has :: Eq a => EncodingTree a -> a -> Bool
-(EncodingLeaf _ sbl) `has` elem = elem == sbl
-(EncodingNode _ left right) `has` elem = (has left elem) || (has right elem)
+(EncodingLeaf _ sbl) `has` element = element == sbl
+(EncodingNode _ left right) `has` element = (has left element) || (has right element)
 
 -- | Computes the binary code of symbol using encoding tree
 -- If computation is not possible, returns `Nothing`.
@@ -33,12 +33,13 @@ encode tree a
  |has tree a == False = Nothing
  |otherwise = chemin tree a []
  
-chemin (EncodingNode et left right) elem acc                                        
- |has left elem == True = (chemin left elem (acc ++ [Zero]))
- |otherwise = (chemin right elem (acc ++ [One]))           
+chemin :: Eq a => EncodingTree a -> a -> [Bit] -> Maybe [Bit]
+chemin (EncodingNode _ left right) element acc                                        
+ |has left element == True = (chemin left element (acc ++ [Zero]))
+ |otherwise = (chemin right element (acc ++ [One]))           
  
-chemin (EncodingLeaf et val) elem acc    
- |val == elem = Just acc 
+chemin (EncodingLeaf _ val) element acc    
+ |val == element = Just acc 
  |otherwise = Nothing
 
 -- | Computes the first symbol from list of bits using encoding tree and also returns the list of bits still to process
@@ -49,11 +50,13 @@ decodeOnce (EncodingNode _ left right) bits
  |null bits == True = Nothing
  |head bits == Zero = decodeOnce left (tail bits)
  |head bits == One = decodeOnce right (tail bits)
+ |otherwise = Nothing
 
 -- | Computes list of symbols from list of bits using encoding tree
 decode :: EncodingTree a -> [Bit] -> Maybe [a]
 decode tree bits = decodeH tree bits []
 
+decodeH :: EncodingTree a -> [Bit] -> [a] -> Maybe [a]
 decodeH tree bits acc =
     let result = decodeOnce tree bits
     in 
@@ -72,8 +75,8 @@ meanLength :: EncodingTree a -> Double
 meanLength tree =  (meanLength' tree 0 0) / (intToDouble (count tree))   
 
 meanLength' :: EncodingTree a -> Int -> Double -> Double
-meanLength' (EncodingLeaf et val) acc _ = intToDouble et * intToDouble acc 
-meanLength' (EncodingNode et left right) acc somme = somme + meanLength' left (acc + 1) 0 + meanLength' right (acc + 1) 0 
+meanLength' (EncodingLeaf et _) acc _ = intToDouble et * intToDouble acc 
+meanLength' (EncodingNode _ left right) acc somme = somme + meanLength' left (acc + 1) 0 + meanLength' right (acc + 1) 0 
 
 -- | Compress method using a function generating encoding tree and also returns generated encoding tree
 join :: Maybe [Bit] -> [Bit]
@@ -85,12 +88,14 @@ compress fct list =
  let tree = fct list 
  in (tree, compress' tree list [])
  
+compress' :: Eq a => Maybe (EncodingTree a) -> [a] -> [Bit] -> [Bit]
 compress' Nothing _ _ = []
-compress' tree [] acc = acc
+compress' _ [] acc = acc
 compress' tree list acc = compress' tree (tail list) (acc ++ compress'' tree (head list))
 
+compress'' :: Eq a => Maybe (EncodingTree a) -> a -> [Bit]
 compress'' Nothing _ = []
-compress'' (Just tree) elem = join (encode tree elem) 
+compress'' (Just tree) element = join (encode tree element) 
 
 -- If input cannot be uncompressed, returns `Nothing`
 uncompress :: (Maybe (EncodingTree a), [Bit]) -> Maybe [a]
